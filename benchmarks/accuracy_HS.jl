@@ -8,9 +8,9 @@
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const MODEL = load_model("model_HS.txt"; fixed = ["c"])
+MODEL = load_model("model_HS.txt"; fixed = ["c"])
 
-const SETTINGS = (; dt_values = [0.25, 0.5, 1.0], noise_levels = [0.005, 0.01, 0.02, 0.05],
+SETTINGS = (; dt_values = [0.25, 0.5, 1.0], noise_levels = [0.005, 0.01, 0.02, 0.05],
                   init_error = 4 .* [0, 0.125, 0.25, 0.375, 0.5], seeds = seed_selection(1:50),
                   observed = [MODEL.K], β_init = "0.5 k0", σ = 0.01)
 

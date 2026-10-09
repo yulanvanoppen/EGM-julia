@@ -10,10 +10,10 @@
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const MODEL = load_model("model_GLV.txt"; fixed = ["r"])
-const IC = (; ic_scan = [1], ic_ties = [2 => 1])
+MODEL = load_model("model_GLV.txt"; fixed = ["r"])
+IC = (; ic_scan = [1], ic_ties = [2 => 1])
 
-const SETTINGS = (; dt_values = [0.25, 0.5, 1.0], noise_levels = [0.005, 0.02, 0.05, 0.1],
+SETTINGS = (; dt_values = [0.25, 0.5, 1.0], noise_levels = [0.005, 0.02, 0.05, 0.1],
                   init_error = 4 .* [0, 0.125, 0.25, 0.375, 0.5], seeds = seed_selection(1:50),
                   observed = [MODEL.K], β_init = "0.5 k0", ic_scan = IC.ic_scan, ic_ties = "2 => 1")
 

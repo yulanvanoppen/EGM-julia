@@ -8,9 +8,9 @@
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const MODEL = load_model("model_repressilator.txt"; fixed = ["DNAT", "kf", "Kd", "m1", "p1"])
-const K0 = MODEL.β0
-const IC = (; ic_scan = [4, 7], ic_ties = [5 => 4, 6 => 4, 8 => 7, 9 => 7])
+MODEL = load_model("model_repressilator.txt"; fixed = ["DNAT", "kf", "Kd", "m1", "p1"])
+K0 = MODEL.β0
+IC = (; ic_scan = [4, 7], ic_ties = [5 => 4, 6 => 4, 8 => 7, 9 => 7])
 
 records = run_test("test_repressilator", MODEL; t = 0:5:100, observed = [1, 2, 3], noise = 0.05,
                    β_init = 0.5 .* K0, x_init = [10, 20, 30, 0.9, 0.9, 0.9, 0.2, 0.2, 0.2],

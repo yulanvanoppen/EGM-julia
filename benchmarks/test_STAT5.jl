@@ -10,23 +10,23 @@
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const MODE = :compat
-const M_STAT5 = let M = Matrix{Float64}(I, 7, 7)                     # x123 = x1 + x2 + 2x3, x23 = x2 + 2x3
+MODE = :compat
+M_STAT5 = let M = Matrix{Float64}(I, 7, 7)                     # x123 = x1 + x2 + 2x3, x23 = x2 + 2x3
     M[1, 2:3] = [1, 2]
     M[2, 3] = 2
     M
 end
-const MODEL = load_model("model_STAT5.txt"; fixed = ["tauinv", "k2"], M = M_STAT5)
+MODEL = load_model("model_STAT5.txt"; fixed = ["tauinv", "k2"], M = M_STAT5)
 
-const T_DATA = let lines = filter(!isempty, strip.(readlines(joinpath(MODEL_DIR, "STAT5-data.csv"))))
+T_DATA = let lines = filter(!isempty, strip.(readlines(joinpath(MODEL_DIR, "STAT5-data.csv"))))
     [parse(Float64, first(split(l, ','))) for l in lines[2:end]]   # first column, header skipped
 end
 
 stat5_constraint(x) = (x[4] = min(x[3], x[4]); x)
-const IC = (; ic_scan = [3, 4], ic_constraint = stat5_constraint)
-const K0 = MODEL.β0
-const BOUNDS = (; lb = 0.1 .* K0, ub = 10 .* K0)
-const OBSERVED = [1, 2]
+IC = (; ic_scan = [3, 4], ic_constraint = stat5_constraint)
+K0 = MODEL.β0
+BOUNDS = (; lb = 0.1 .* K0, ub = 10 .* K0)
+OBSERVED = [1, 2]
 
 stat5_metrics(res, egm_res, d) = (; SS = sum_of_squares(MODEL, res.beta, d, OBSERVED),
                                     GSS = gss(MODEL, egm_res.result, res.beta, OBSERVED))

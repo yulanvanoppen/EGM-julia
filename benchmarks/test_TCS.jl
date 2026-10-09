@@ -7,10 +7,10 @@
 
 include(joinpath(@__DIR__, "common.jl"))
 
-const MODEL = load_model("model_TCS.txt"; fixed = ["k2", "k3", "k6", "k8"])
-const K0 = MODEL.β0
-const BOUNDS = (; lb = 0.1 .* K0, ub = 10 .* K0)
-const IC = (; ic_scan = [4])
+MODEL = load_model("model_TCS.txt"; fixed = ["k2", "k3", "k6", "k8"])
+K0 = MODEL.β0
+BOUNDS = (; lb = 0.1 .* K0, ub = 10 .* K0)
+IC = (; ic_scan = [4])
 
 records = run_test("test_TCS", MODEL; t = [0, 1, 3, 5:5:50...], observed = [3, 5, 6], noise = 0.05,
                    β_init = 0.5 .* K0, x_init = [0, 0, 0.2, 2.5, 0, 0] .+ eps(),

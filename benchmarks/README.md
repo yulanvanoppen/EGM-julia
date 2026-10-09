@@ -23,6 +23,16 @@ Then run a script from the package folder:
 julia --project=benchmarks benchmarks/test_STAT5.jl
 ```
 
+From a REPL in an editor (VS Code / VSCodium with the Julia extension), with the repository folder as the working directory:
+```julia
+using Pkg
+Pkg.activate("benchmarks")
+Pkg.instantiate()                       # first time only
+ENV["EGM_SEEDS"] = "1:2"                # optional settings, see below
+include("benchmarks/test_STAT5.jl")
+```
+Scripts can be included one after another in the same session.
+
 Options are set with environment variables:
 
 `EGM_DATA` - Source of the datasets  
