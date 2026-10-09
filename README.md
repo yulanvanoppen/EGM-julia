@@ -7,7 +7,7 @@ _Julia package for parameter inference of ODE models with uncertain initial cond
 Install Julia 1.10 or later, then add the package:
 ```julia
 julia> ]
-pkg> add https://github.com/yulanvanoppen/EGM.jl
+pkg> add https://github.com/yulanvanoppen/EGM-julia
 ```
 
 Run `examples/example.jl` to simulate measurements of one state of the Higgins–Selkov oscillator and recover its parameters and the initial condition of the unobserved state with EGM and with trajectory matching.
