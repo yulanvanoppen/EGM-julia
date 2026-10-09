@@ -39,6 +39,9 @@ using EGM: tm, generate_data, egm_cells, load_iqm, parse_iqm, compile_iqm, integ
         r = tm(m, t, data.traces[:, :, 1], [2], 0.6 .* m.β0; x_init = [1.5, 0.8])
         @test relerr(r.β, m.β0) < 0.2
         @test r.sigma2[1] ≥ 0 && r.tau2[1] ≥ 0
+        @test r.iterations ≥ 2                                          # refitted with the estimated noise model
+        r1 = tm(m, t, data.traces[:, :, 1], [2], 0.6 .* m.β0; x_init = [1.5, 0.8], min_iter = 1)
+        @test r1.iterations ≥ 1
     end
 
     @testset "parameter uncertainties" begin

@@ -103,11 +103,21 @@ The observed initial conditions start at the first measurements. With
 `estimate_x0`, an initial-condition search like that of [`egm`](@ref) selects the
 starting point. Initial conditions are bounded below by `eps()` if `positive`
 (else −100) and above by 10⁴, as in EGM-v2.
+
+`min_iter` (default 2) sets the minimum number of iterations before convergence
+is checked. With the default, β is always refitted at least once with the
+re-estimated noise model (feasible weighted least squares). With `min_iter = 1`,
+the loop can stop after the first fit, which still uses the initial weights
+`1/(y² + 0.1 mean(y)²)`. That happens whenever the first fit barely moves β
+from the initial-condition search, which is common here because that search
+already optimizes tightly. (In EGM-v2 the search uses loose tolerances, so the
+loop usually continues anyway.)
 """
 function tm(m::ODEModel, t, traces, observed, β_init; estimate_x0::Bool = true, x_init = m.x0,
             lb = 0.25 .* m.β0, ub = 4 .* m.β0 .+ 1e-4 * sum(m.β0) / m.P, positive::Bool = true,
             niter::Integer = 20, tol = 1e-4, ic_scan = nothing, ic_multipliers = 4.0 .^ (-1:0.5:1),
-            ic_ties = Pair{Int,Int}[], ic_constraint = identity, reltol = 1e-6, alg = Tsit5())
+            ic_ties = Pair{Int,Int}[], ic_constraint = identity, min_iter::Integer = 2, reltol = 1e-6,
+            alg = Tsit5())
     K, P = m.K, m.P
     t = _fvec(t)
     T = length(t)
@@ -161,7 +171,7 @@ function tm(m::ODEModel, t, traces, observed, β_init; estimate_x0::Bool = true,
     βs = [copy(β)]
     sigma2, tau2 = zeros(L), zeros(L)
     fitted = zeros(T, K)
-    for _ in 1:max(1, niter)
+    for iter in 1:max(1, niter, min_iter)
         θ, _ = lm_bounded(resjac, estimate_x0 ? vcat(β, x0) : β, lo, hi)
         β = θ[1:P]
         estimate_x0 && (x0 = θ[P+1:end])
@@ -179,7 +189,7 @@ function tm(m::ODEModel, t, traces, observed, β_init; estimate_x0::Bool = true,
             variances[:, l] = design * c
         end
         push!(βs, copy(β))
-        relative_change(βs[end-1], βs[end]) < max(1e-12, tol) && break
+        iter ≥ min_iter && relative_change(βs[end-1], βs[end]) < max(1e-12, tol) && break
     end
 
     t_fine = matlab_linspace(t[1], t[end], 81)

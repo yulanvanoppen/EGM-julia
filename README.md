@@ -179,7 +179,7 @@ k2 = 0.5
 &nbsp;
 
 ### `tm()` trajectory matching
-`result = tm(model, t, traces, observed, β_init; ...)` estimates the parameters by fitting the integrated model directly to the measurements (weighted least squares), alternating with re-estimation of the noise model. By default, the initial conditions are estimated too (`estimate_x0 = true`), after an initial-condition search like that of `egm`. It accepts `x_init`, `lb`, `ub`, `positive`, `niter`, `tol`, the `ic_*` options, `reltol` and `alg`. The result contains `β`, `x0`, the noise model and the fits.
+`result = tm(model, t, traces, observed, β_init; ...)` estimates the parameters by fitting the integrated model directly to the measurements (weighted least squares), alternating with re-estimation of the noise model. By default, the initial conditions are estimated too (`estimate_x0 = true`), after an initial-condition search like that of `egm`. It accepts `x_init`, `lb`, `ub`, `positive`, `niter`, `tol`, `min_iter`, the `ic_*` options, `reltol` and `alg`. By default (`min_iter = 2`), the parameters are always refitted at least once with the estimated noise model. The result contains `β`, `x0`, the noise model and the fits.
 
 &nbsp;
 

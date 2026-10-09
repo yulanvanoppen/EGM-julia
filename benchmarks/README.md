@@ -122,6 +122,7 @@ In MATLAB, read it with `readtable(file)`.
 &nbsp;
 
 ## Notes
+- Trajectory matching refits at least once with the estimated noise model (`min_iter = 2`, see `?tm`). Results from before this change stopped after one iteration and used the initial noise weights.
 - `test_STAT5.jl` runs in `mode = :compat` (constant `MODE`) to match the current EGM-v2 code.
 - `accuracy_GLV.m` refers to `auxiliary_GLV_legacyConvention.txt`, which is not in the EGM-v2 repository. The Julia port uses the standard variational equation, like the other models.
 - Models are read from the EGM-v2 model files in `benchmarks/models` (`load_iqm` and `compile_iqm`).

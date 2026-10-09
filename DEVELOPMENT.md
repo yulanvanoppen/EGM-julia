@@ -35,6 +35,8 @@ EGM.jl was translated from the MATLAB package [EGM-v2](https://github.com/yulanv
   | `mpcActiveSetSolver` | `box_qp`: primal active-set method, exact for strictly convex problems |
   | `fmincon` in log space for trajectory matching | `lm_bounded`: bounded Levenberg–Marquardt with exact forward sensitivities |
 
+- **Trajectory matching always refits with the estimated noise model** (`min_iter = 2`). Because the initial-condition search in Julia already optimizes tightly, the first refit barely moves β. With the MATLAB stopping rule, Julia TM therefore stopped after one iteration, still using the initial weights. MATLAB's loose search (`StepTolerance` 1e-4, at most 50 iterations) usually avoids this by accident.
+
 - **Performance.** The variational and sensitivity systems use an in-place right-hand side with a reusable ForwardDiff configuration. A generic out-of-place path is kept for non-Float64 states, which arise in implicit solvers with automatic differentiation.
 
 &nbsp;
