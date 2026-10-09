@@ -79,6 +79,10 @@ Comparisons with MATLAB are skipped (with a warning) when the reference files ar
 
 Each module is tested on MATLAB's inputs to that module, not on upstream Julia output, so a discrepancy points to one component. Pure linear algebra (B-splines, Savitzky–Golay, covariance bookkeeping, GLS) agrees to near machine precision. Steps involving ODE solvers or iterative optimizers agree to roughly their tolerances.
 
+### Benchmarks against the MATLAB simulation studies
+
+`benchmarks/` ports `accuracy_*.m` and `test_*.m`. `matlab/export_datasets.m` exports the datasets those MATLAB scripts generate, so the Julia ports can run on identical data. Results are written as JSON and CSV; see `benchmarks/README.md` for the format.
+
 ### Diagnostic reports
 
 `test/diagnostics/phaseN_report.jl` prints every MATLAB comparison of phase N with relative errors and the locations of the largest deviations. To run one:

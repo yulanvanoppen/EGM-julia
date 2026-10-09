@@ -47,7 +47,7 @@ export egm, egm_inference, egm_cells, EGMResult, ic_candidates
 include("tm.jl")
 include("generate.jl")
 include("iqm.jl")
-export tm, TMResult, generate_data, load_iqm, parse_iqm, integrate_sensitivities,
+export tm, TMResult, generate_data, load_iqm, parse_iqm, compile_iqm, integrate_sensitivities,
        parameter_covariance
 
 end # module

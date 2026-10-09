@@ -73,6 +73,30 @@ function _iqm_interpolants!(ex, interps)
     return Expr(ex.head, args...)
 end
 
+# Right-hand side generated from a model file. It is defined at load time, so calls from
+# code compiled earlier go through invokelatest; see `compile_iqm`.
+struct IQMRHS{F} <: Function
+    f::F
+end
+(r::IQMRHS)(x, β, t) = Base.invokelatest(r.f, x, β, t)
+
+"""
+    compile_iqm(model) -> ODEModel
+
+Remove the `invokelatest` indirection from a model loaded with [`load_iqm`](@ref),
+for full speed. Call it in a later top-level statement than `load_iqm`, or after
+it in the same statement, but use the result only from later top-level
+statements:
+```julia
+model = compile_iqm(load_iqm("model_HS.txt"; fixed = ["c"]))
+result = egm(model, t, y, [2], β_init)          # next statement: fine
+```
+Models that were not loaded from a file are returned unchanged.
+"""
+compile_iqm(m::ODEModel{<:IQMRHS}) =
+    ODEModel(m.f.f, m.K, m.P, m.states, m.parameters, m.x0, m.β0, m.M, m.tstops, m.name)
+compile_iqm(m::ODEModel) = m
+
 """
     load_iqm(path; fixed = String[], fixed_values = nothing, M = I, check = true) -> ODEModel
     parse_iqm(text; ...)
@@ -88,9 +112,8 @@ Build an [`ODEModel`](@ref) from an IQM Tools model file, as EGM-v2's `System`:
   unless `check = false`.
 
 The generated right-hand side is compiled at load time and called through
-`Base.invokelatest`. This is slightly slower than a hand-written Julia function;
-for large studies, write the model in Julia (the parsed model's states and
-parameters show the order to use).
+`Base.invokelatest`, which is slightly slower than a hand-written function.
+[`compile_iqm`](@ref) removes this overhead.
 """
 load_iqm(path::AbstractString; kwargs...) = parse_iqm(read(path, String); kwargs...)
 
@@ -169,7 +192,7 @@ function parse_iqm(text::AbstractString; fixed = String[], fixed_values = nothin
     fgen = Core.eval(mod, :(function __rhs(__x, __β, __t)
                                 $(body...)
                             end))
-    f = (x, β, t) -> Base.invokelatest(fgen, x, β, t)
+    f = IQMRHS(fgen)
     tstops = isempty(interps) ? Float64[] : sort(unique(reduce(vcat, breakpoints.(interps))))
     β0 = [values[findfirst(==(p), params)] for p in free]
     return ODEModel(f; states = states, parameters = free, x0 = x0, β0 = β0, M = M, tstops = tstops,

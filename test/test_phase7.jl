@@ -6,7 +6,8 @@
 #   - data generator and multiple cells;
 #   - IQM model-file parser against the hand-written test models.
 
-using EGM: tm, generate_data, egm_cells, load_iqm, parse_iqm, integrate_sensitivities, parameter_covariance
+using EGM: tm, generate_data, egm_cells, load_iqm, parse_iqm, compile_iqm, integrate_sensitivities,
+           parameter_covariance
 
 @testset "Phase 7: extras" begin
 
@@ -116,6 +117,9 @@ using EGM: tm, generate_data, egm_cells, load_iqm, parse_iqm, integrate_sensitiv
             end
             @test EGM.dfdx(m, ref.x0, ref.β0, 3.0) ≈ EGM.dfdx(ref, ref.x0, ref.β0, 3.0)
         end
+        mc = compile_iqm(load_iqm(joinpath(dir, "model_HS.txt"); fixed = ["c"]))  # direct call, no invokelatest
+        @test !(mc.f isa EGM.IQMRHS)
+        @test Base.invokelatest(EGM.rhs, mc, [1.0, 2.0], [1.0, 1.0], 0.0) ≈ EGM.rhs(higgins_selkov(), [1.0, 2.0], [1.0, 1.0], 0.0)
         m = load_iqm(joinpath(dir, "model_HS.txt"); fixed = ["c"], fixed_values = [0.5])
         @test EGM.rhs(m, [1.0, 2.0], [1.0, 1.0], 0.0) ≈ [1 - 0.5 * 4, 0.5 * 4 - 2]
 
