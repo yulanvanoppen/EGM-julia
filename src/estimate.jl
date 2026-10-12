@@ -112,6 +112,12 @@ Smoothing
 - `autoknots = true`: automatic knot placement when `knots` is not given.
 - `niter_sm = 20`, `tol_sm = 1e-3`: smoother iterations and tolerance.
 - `positive = true`: clip smoothed values and fits at 1e-12.
+- `interactive = false`: choose the knots in the smoothing app
+  ([`smoothing_app`](@ref), requires `using GLMakie`). The app starts from
+  `knots` or the automatic placement. The smoothing time then includes the time
+  spent in the app. If the app is finished with "Finish without estimation", or
+  closed, `egm` stops and returns the app's result `(; knots, knots_time,
+  smoothing, action)` instead of an `EGMResult`.
 
 Kalman smoothing
 - `x_init = model.x0`: initial-condition guess.
@@ -137,16 +143,29 @@ Output
 - `verbose = false`: print progress.
 """
 function egm(m::ODEModel, t, traces, observed, β_init; knots = nothing, autoknots::Bool = true,
-             t_gm = t, niter_sm::Integer = 20, tol_sm = 1e-3, positive::Bool = true, kwargs...)
+             t_gm = t, niter_sm::Integer = 20, tol_sm = 1e-3, positive::Bool = true, interactive::Bool = false,
+             kwargs...)
     t = _fvec(t)
     traces = Matrix{Float64}(reshape(traces, length(t), :))
     t_gm = sort(unique(_fvec(t_gm)))
     all(in(t), t_gm) || throw(ArgumentError("t_gm must be a subset of the data time points t"))
     issorted(t) && allunique(t) || throw(ArgumentError("t must be strictly increasing"))
     t0 = time_ns()
-    kn = resolve_knots(t, traces; knots = knots, autoknots = autoknots)
-    sb = SplineBases(t, t_gm, kn)
-    sr = smooth(sb, traces; niter = max(1, niter_sm), tol = max(1e-12, tol_sm), positive = positive)
+    if interactive                                                    # knots chosen in the app (needs GLMakie)
+        app = smoothing_app(t, traces; knots = knots, autoknots = autoknots, t_gm = t_gm,
+                            state_names = m.states[collect(observed)], niter = max(1, niter_sm),
+                            tol = max(1e-12, tol_sm), positive = positive, estimation = true)
+        if app.action !== :estimate                                   # smoothing only
+            @info "Estimation skipped: the smoothing app was finished without estimation (action = :$(app.action)). " *
+                  "Returning the smoothing result."
+            return app
+        end
+        sr = app.smoothing
+    else
+        kn = resolve_knots(t, traces; knots = knots, autoknots = autoknots)
+        sb = SplineBases(t, t_gm, kn)
+        sr = smooth(sb, traces; niter = max(1, niter_sm), tol = max(1e-12, tol_sm), positive = positive)
+    end
     time_sm = (time_ns() - t0) / 1e9
     return egm_inference(m, sr, traces, observed, β_init; positive = positive, time_sm = time_sm, kwargs...)
 end

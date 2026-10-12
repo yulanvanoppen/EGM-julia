@@ -140,6 +140,47 @@ function place_knots(t::AbstractVector, traces::AbstractMatrix)
     T, L = size(traces)
     length(t) == T || throw(DimensionMismatch("length(t) = $(length(t)) but traces has $T rows"))
     T ≥ 5 || throw(ArgumentError("automatic knot placement needs at least 5 time points"))
+    dy, ddy = _slopes_curvatures(t, traces)
+    zdy = dy ./ permutedims([_std(c) for c in eachcol(dy)])           # single trajectory: normalize over time
+    zddy = ddy ./ permutedims([_std(c) for c in eachcol(ddy)])
+    return _place_knots(t, zdy, zddy)
+end
+
+"""
+    place_knots(t, traces::AbstractArray{<:Real,3}) -> Vector{Vector{Float64}}
+
+Knot placement for `N` trajectories (`traces` is `T × L × N`), as GMGTS's
+`Smoother.place_knots`: the heuristic is applied to the mean slopes and curvatures
+over the cells, normalized by their standard deviations over the cells. With
+`N = 1` this is the single-trajectory method.
+"""
+function place_knots(t::AbstractVector, traces::AbstractArray{<:Real,3})
+    size(traces, 3) == 1 && return place_knots(t, traces[:, :, 1])
+    t = collect(float.(t))
+    T, L, N = size(traces)
+    length(t) == T || throw(DimensionMismatch("length(t) = $(length(t)) but traces has $T rows"))
+    T ≥ 5 || throw(ArgumentError("automatic knot placement needs at least 5 time points"))
+    per_cell = [_slopes_curvatures(t, traces[:, :, i]) for i in 1:N]
+    dy = cat((p[1] for p in per_cell)...; dims = 3)
+    ddy = cat((p[2] for p in per_cell)...; dims = 3)
+    zscore(A) = dropdims(sum(A; dims = 3) ./ N ./ mapslices(_std, A; dims = 3); dims = 3)
+    return _place_knots(t, zscore(dy), zscore(ddy))
+end
+
+# finite-difference slopes and curvatures on the (possibly non-uniform) grid
+function _slopes_curvatures(t, traces)
+    d21 = t[2:end-1] .- t[1:end-2]
+    d31 = t[3:end] .- t[1:end-2]
+    d32 = t[3:end] .- t[2:end-1]
+    y1, y2, y3 = traces[1:end-2, :], traces[2:end-1, :], traces[3:end, :]
+    dy = (y3 .- y1) ./ (d32 .+ d21)
+    ddy = 2 .* (y1 ./ d21 ./ d31 .- y2 ./ d32 ./ d21 .+ y3 ./ d32 ./ d31)
+    return dy, ddy
+end
+
+# the placement heuristic, given normalized slopes and curvatures ((T−2) × L)
+function _place_knots(t, zdy, zddy)
+    T, L = length(t), size(zdy, 2)
 
     # three equidistant base knots at the closest data points
     base = falses(T - 2, L)
@@ -149,15 +190,6 @@ function place_knots(t::AbstractVector, traces::AbstractMatrix)
         1 ≤ i - 1 ≤ T - 2 && (base[i-1, :] .= true)
     end
 
-    # finite-difference slopes and curvatures on the (possibly non-uniform) grid
-    d21 = t[2:end-1] .- t[1:end-2]
-    d31 = t[3:end] .- t[1:end-2]
-    d32 = t[3:end] .- t[2:end-1]
-    y1, y2, y3 = traces[1:end-2, :], traces[2:end-1, :], traces[3:end, :]
-    dy = (y3 .- y1) ./ (d32 .+ d21)
-    ddy = 2 .* (y1 ./ d21 ./ d31 .- y2 ./ d32 ./ d21 .+ y3 ./ d32 ./ d31)
-    zdy = dy ./ permutedims([_std(c) for c in eachcol(dy)])
-    zddy = ddy ./ permutedims([_std(c) for c in eachcol(ddy)])
 
     # peaks and troughs: sign changes of the slope, moved to the smaller |slope|
     crossings = vcat(abs.(diff(sign.(zdy); dims = 1)) .== 2, falses(1, L))

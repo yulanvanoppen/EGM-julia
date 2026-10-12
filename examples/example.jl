@@ -2,7 +2,8 @@
 # measurements of one of its two states (P), with an uncertain initial condition
 # for the hidden state (S). Mirrors example.m of EGM-v2.
 #
-# Run from the package folder:   julia --project=. examples/example.jl
+# Run from the package folder:   julia --project=examples examples/example.jl
+# (in a REPL: using Pkg; Pkg.activate("examples"); Pkg.instantiate(); include("examples/example.jl"))
 
 using EGM, LinearAlgebra, Random, Printf
 

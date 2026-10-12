@@ -16,7 +16,9 @@ EGM.jl was translated from the MATLAB package [EGM-v2](https://github.com/yulanv
 | `src/estimate.jl` | `EGM.estimate`, `EGM.init_ICmean` | `egm`, `egm_inference`, `egm_cells`, `ic_candidates` |
 | `src/tm.jl` | `TM.m`, `EGM.estimate_TM` | Trajectory matching |
 | `src/generate.jl` | `Generator.m` | Synthetic data |
-| `src/iqm.jl` | IQM Tools parsing in `System.m` | `load_iqm`, `parse_iqm` |
+| `src/iqm.jl` | IQM Tools parsing in `System.m` | `load_iqm`, `parse_iqm`, `compile_iqm` |
+| `src/interactive.jl` | GMGTS `Smoother.m` (multiple cells), logic of `smoothing_new.mlapp` | `Smoother`, `SmoothingSession` and app actions |
+| `ext/EGMMakieExt.jl` | `smoothing_new.mlapp` (window) | `smoothing_app`, loaded with GLMakie |
 
 &nbsp;
 
@@ -38,6 +40,13 @@ EGM.jl was translated from the MATLAB package [EGM-v2](https://github.com/yulanv
 - **Trajectory matching always refits with the estimated noise model** (`min_iter = 2`). Because the initial-condition search in Julia already optimizes tightly, the first refit barely moves β. With the MATLAB stopping rule, Julia TM therefore stopped after one iteration, still using the initial weights. MATLAB's loose search (`StepTolerance` 1e-4, at most 50 iterations) usually avoids this by accident.
 
 - **Performance.** The variational and sensitivity systems use an in-place right-hand side with a reusable ForwardDiff configuration. A generic out-of-place path is kept for non-Float64 states, which arise in implicit solvers with automatic differentiation.
+
+- **The smoothing app is split into logic and window.** Every action of `smoothing_new.mlapp` is a function on `SmoothingSession`, tested without a GUI (`test_phase8.jl`). The GLMakie window only forwards events and redraws. Deliberate differences from the MATLAB app:
+  - The fine time grid for plotting is `t₁ + s·(t_T − t₁)`. The MATLAB app used `(s + t₁)·(t_T − t₁)`, which shifts the curves when `t₁ ≠ 0`.
+  - Finishing with Live off smooths the states changed since their last smoothing. MATLAB left them with reset coefficients.
+  - Changing the state selection does not reset coefficients.
+  - Duplicate knots are merged.
+  - From `egm(…; interactive = true)`, the app offers "Finish without estimation". That button, or closing the window, stops after smoothing. In MATLAB, closing the window re-smoothed and continued with the estimation.
 
 &nbsp;
 
@@ -78,6 +87,7 @@ Comparisons with MATLAB are skipped (with a warning) when the reference files ar
 | `test_phase5.jl` | Gradient-matching step |
 | `test_phase6.jl` | Complete estimation |
 | `test_phase7.jl` | Sensitivities, trajectory matching, uncertainties, data generator, multiple cells, IQM parser |
+| `test_phase8.jl` | Multi-trajectory smoother and smoothing-app logic (no window) |
 
 Each module is tested on MATLAB's inputs to that module, not on upstream Julia output, so a discrepancy points to one component. Pure linear algebra (B-splines, Savitzky–Golay, covariance bookkeeping, GLS) agrees to near machine precision. Steps involving ODE solvers or iterative optimizers agree to roughly their tolerances.
 

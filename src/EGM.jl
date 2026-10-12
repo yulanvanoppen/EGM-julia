@@ -43,6 +43,11 @@ export GradientMatching, GMStepResult, gm_step, qp_gls
 include("estimate.jl")
 export egm, egm_inference, egm_cells, EGMResult, ic_candidates
 
+# Interactive smoothing: multi-trajectory smoother and app logic (window in ext/EGMMakieExt.jl)
+include("interactive.jl")
+export Smoother, smoothing_result, CellSmoothingResult, SmoothingSession, smoothing_app,
+       select_states!, click_knot!, equidistant_knots!, automatic_knots!, smooth!, finish!
+
 # Phase 7: trajectory matching, uncertainties, data generation, IQM model files
 include("tm.jl")
 include("generate.jl")

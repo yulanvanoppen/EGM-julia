@@ -10,7 +10,7 @@ julia> ]
 pkg> add https://github.com/yulanvanoppen/EGM-julia
 ```
 
-Run `examples/example.jl` to simulate measurements of one state of the Higgins–Selkov oscillator and recover its parameters and the initial condition of the unobserved state with EGM and with trajectory matching.
+Run `examples/example.jl` (environment: `examples/`) to simulate measurements of one state of the Higgins–Selkov oscillator and recover its parameters and the initial condition of the unobserved state with EGM and with trajectory matching.
 
 The package is a Julia translation of the MATLAB® package [EGM-v2](https://github.com/yulanvanoppen/EGM-v2). It needs no MATLAB, IQM Tools or Monolix installation. IQM Tools model files can still be read with `load_iqm`.
 
@@ -108,6 +108,9 @@ The prior mean of the uncertain initial conditions is chosen beforehand by a gri
 `identity (default) | function`  
 (e.g. `x -> (x[4] = min(x[3], x[4]); x)` enforces `x₄(0) ≤ x₃(0)`)
 
+`interactive` - Choose the smoothing knots in the interactive smoothing app (requires `using GLMakie`)  
+`false (default) | true`
+
 `niter_sm`, `tol_sm` - Maximum number of smoothing iterations and convergence tolerance  
 `20, 1e-3 (default) | positive integer, positive scalar`
 
@@ -141,6 +144,26 @@ The prior mean of the uncertain initial conditions is chosen beforehand by a gri
 | `kalman` | `KalmanResult` of the last iteration: smoothed means `xbar`, covariances `P`, standard deviations `sd` |
 | `gm` | `GMStepResult` of the last iteration: state and derivative estimates `X`, `dX`, residual covariance `V` |
 | `time` | Seconds spent on smoothing and on inference |
+
+&nbsp;
+
+### Interactive smoothing app
+`out = smoothing_app(t, traces; state_names = names, ...)` opens a window for choosing the B-spline knots by hand, with immediate visual feedback. `traces` is `T×L` (one trajectory) or `T×L×N` (`N` cells). The knots start from `knots` (time units) or from the automatic knot placement. Julia waits until you press Finish or close the window. Then `out.knots` (normalized, per state), `out.knots_time` (time units, usable as `egm(_; knots = out.knots_time)`) and `out.smoothing` (the smoothing result) are returned. `out.action` records how the app was ended (`:finish`, `:estimate` or `:closed`).
+
+`egm(_; interactive = true)` opens the app as part of the estimation. The app then has two buttons: [Finish and run estimation] continues with EGM, and [Finish without estimation] stops after smoothing. In the latter case, and when the window is closed, `egm` returns the app's output instead of an `EGMResult`.
+
+The app needs GLMakie, which is not installed with EGM.jl. Add it to your environment (`] add GLMakie`; the first installation takes a few minutes) and load it with `using GLMakie`. The folder `examples/` has an environment that includes it; see `examples/smoothing_app.jl`.
+
+The window contains the following controls:
+- **[State(s)] menu:** Edit all states together ([All]), or one state.
+- **[Automatic knot placement] button:** Replace the knots of the selected state(s) using the knot placement heuristic.
+- **[#Knots] slider:** Replace the knots of the selected state(s) by equidistant knots.
+- **[Manual knot selector] plot:** Shows the B-spline basis and the knots (dashed lines) of the selected state, or of the first state if [All] is selected. Left click adds a knot, right click removes the nearest one. With [All], the result is applied to all states.
+- **[#Cells] slider:** Number of trajectories shown (several cells only). The most typical cell is shown first, followed by the others from most to least atypical.
+- **[Smooth] button and [Live] toggle:** Smooth with the current knots, or smooth after every change.
+- **[Finish] button:** Return the knots and smoothing result. States changed without smoothing are smoothed first. From `egm`, there are two buttons instead: [Finish and run estimation] and [Finish without estimation].
+
+The right side shows the measurements (solid) and smoothed curves (dashed) of the selected state(s), one colour per cell.
 
 &nbsp;
 
@@ -215,6 +238,8 @@ The stages of `egm` can also be used separately, for example to inspect intermed
 | Function | Purpose |
 |---|---|
 | `resolve_knots`, `place_knots`, `SplineBases` | Knot selection and B-spline bases on the data, inference and plotting grids |
+| `Smoother`, `smoothing_result` | Mutable smoother for one or more trajectories, as used by the app |
+| `SmoothingSession` and its actions | The smoothing app without a window (`select_states!`, `click_knot!`, `equidistant_knots!`, `automatic_knots!`, `smooth!`, `finish!`) |
 | `smooth` | B-spline smoothing with noise model estimation (`SmoothingResult`) |
 | `KalmanSmoother`, `eks` | Extended Kalman smoothing of all states for given `β` (`KalmanResult`) |
 | `augment_covariances` | Extend the Kalman covariances to all measurement time points |
