@@ -5,15 +5,6 @@
 
 using EGM: ODEModel, integrate, integrate_variational, LinearInterpolant
 
-"Central finite-difference Jacobian of `F` at `x` (columns = directions)."
-function fd_jacobian(F, x; ε = 1e-6)
-    cols = map(eachindex(x)) do j
-        e = zeros(length(x))
-        e[j] = ε * (1 + abs(x[j]))
-        (F(x .+ e) .- F(x .- e)) ./ (2 * e[j])
-    end
-    return reduce(hcat, cols)
-end
 
 @testset "Phase 1: model layer" begin
 

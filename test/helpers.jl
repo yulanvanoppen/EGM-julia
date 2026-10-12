@@ -2,6 +2,17 @@
 # and conversions of MATLAB reference data.
 
 using EGM: SplineBases, SmoothingResult
+using Random
+
+"Central finite-difference Jacobian of `F` at `x` (columns = directions)."
+function fd_jacobian(F, x; ε = 1e-6)
+    cols = map(eachindex(x)) do j
+        e = zeros(length(x))
+        e[j] = ε * (1 + abs(x[j]))
+        (F(x .+ e) .- F(x .- e)) ./ (2 * e[j])
+    end
+    return reduce(hcat, cols)
+end
 
 "User-supplied knots (time units) of the reference cases; `nothing` = automatic placement."
 const USER_KNOTS = Dict("HS_P" => nothing, "HS_P_sub" => nothing,
