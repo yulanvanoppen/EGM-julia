@@ -22,6 +22,8 @@ The package is a Julia translation of the MATLAB® package [EGM-v2](https://gith
 
 `generate_data` simulates measurements from a model.
 
+`smoothing_app` smooths measurements interactively, also on its own, without estimation (see [SMOOTHING_APP.md](SMOOTHING_APP.md)).
+
 &nbsp;
 
 
@@ -148,6 +150,8 @@ The prior mean of the uncertain initial conditions is chosen beforehand by a gri
 &nbsp;
 
 ### Interactive smoothing app
+The smoothing app has its own page: [SMOOTHING_APP.md](SMOOTHING_APP.md). In brief:
+
 `out = smoothing_app(t, traces; state_names = names, ...)` opens a window for choosing the B-spline knots by hand, with immediate visual feedback. `traces` is `T×L` (one trajectory) or `T×L×N` (`N` cells). The knots start from `knots` (time units) or from the automatic knot placement. Julia waits until you press Finish or close the window. Then `out.knots` (normalized, per state), `out.knots_time` (time units, usable as `egm(_; knots = out.knots_time)`) and `out.smoothing` (the smoothing result) are returned. `out.action` records how the app was ended (`:finish`, `:estimate` or `:closed`).
 
 `egm(_; interactive = true)` opens the app as part of the estimation. The app then has two buttons: [Finish and run estimation] continues with EGM, and [Finish without estimation] stops after smoothing. In the latter case, and when the window is closed, `egm` returns the app's output instead of an `EGMResult`.
