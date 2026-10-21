@@ -1,17 +1,17 @@
 # EGM.jl: Extended Gradient Matching
 _Julia package for parameter inference of ODE models with uncertain initial conditions and unobserved states, using the extended gradient matching (EGM) method presented in Chapter 4 of [1]_
 
+| Document | Content |
+|---|---|
+| README.md (this page) | Overview, method and use of EGM.jl |
+| [INSTALL.md](INSTALL.md) | Installation from scratch, environments, troubleshooting |
+| [SMOOTHING_APP.md](SMOOTHING_APP.md) | Interactive smoothing app |
+| [benchmarks/README.md](benchmarks/README.md) | Ports of the EGM-v2 simulation studies |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Translation from MATLAB, design decisions, tests against MATLAB |
+
 &nbsp;
 
-## Quickstart
-Install Julia 1.10 or later, then add the package:
-```julia
-julia> ]
-pkg> add https://github.com/yulanvanoppen/EGM-julia
-```
-
-Run `examples/example.jl` (environment: `examples/`) to simulate measurements of one state of the Higgins–Selkov oscillator and recover its parameters and the initial condition of the unobserved state with EGM and with trajectory matching.
-
+## Overview
 The package is a Julia translation of the MATLAB® package [EGM-v2](https://github.com/yulanvanoppen/EGM-v2). It needs no MATLAB, IQM Tools or Monolix installation. IQM Tools model files can still be read with `load_iqm`.
 
 `ODEModel` defines an ODE system that is linear in its unknown parameters, either as a Julia function or from an IQM Tools model file.
@@ -23,6 +23,28 @@ The package is a Julia translation of the MATLAB® package [EGM-v2](https://gith
 `generate_data` simulates measurements from a model.
 
 `smoothing_app` smooths measurements interactively, also on its own, without estimation (see [SMOOTHING_APP.md](SMOOTHING_APP.md)).
+
+&nbsp;
+
+
+## Installation
+EGM.jl is used from its source code, so that models, parsers and other parts can be added or adapted. With Julia 1.11 or later, download the repository and link it to an environment for your project:
+```
+git clone https://github.com/yulanvanoppen/EGM-julia
+```
+```julia
+julia> using Pkg
+julia> Pkg.activate("path/to/MyEGMProject")               # an environment for your project
+julia> Pkg.develop(path = "path/to/EGM-julia")            # use the downloaded code
+julia> Pkg.add("GLMakie")                                 # optional: only for the interactive smoothing app
+```
+For a complete walk-through, see [INSTALL.md](INSTALL.md). It covers Julia and the REPL, environments, the example, benchmark and test environments of the repository, changing and updating the code, and troubleshooting.
+
+Then run the first example:
+```julia
+julia> include("path/to/EGM-julia/examples/example.jl")
+```
+It simulates noisy measurements of one state of the Higgins–Selkov oscillator, and recovers its parameters and the initial condition of the unobserved state with EGM and with trajectory matching.
 
 &nbsp;
 

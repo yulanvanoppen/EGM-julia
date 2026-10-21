@@ -4,13 +4,17 @@ _Interactive B-spline smoothing of time series with an additive and multiplicati
 &nbsp;
 
 ## Quickstart
-Install EGM.jl and GLMakie (Julia 1.10 or later):
-```julia
-julia> ]
-pkg> add https://github.com/yulanvanoppen/EGM-julia
-pkg> add GLMakie
+Download EGM.jl and link it to your environment together with GLMakie (Julia 1.11 or later):
 ```
-The first installation and use of GLMakie compile for several minutes. Later sessions start much faster.
+git clone https://github.com/yulanvanoppen/EGM-julia
+```
+```julia
+julia> using Pkg
+julia> Pkg.activate("path/to/MyProject")
+julia> Pkg.develop(path = "path/to/EGM-julia")
+julia> Pkg.add("GLMakie")
+```
+The first installation and use of GLMakie compile for several minutes. Later sessions start much faster. See [INSTALL.md](INSTALL.md) for installing Julia, setting up an environment, and troubleshooting.
 
 Then smooth your data:
 ```julia
